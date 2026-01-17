@@ -2,8 +2,9 @@
 
 ## 🚨 Current Status & Key Findings (Updated)
 - **Text-to-Speech (Audio Generation):**
-  - **✅ Working Solution:** **Google Cloud Text-to-Speech API** (Standard/Neural2 voices). Code: `experiments/standard_tts.py`.
-  - **❌ Blocked:** Native Gemini 2.5 Audio Generation (via `generateContent` with `audio/wav`) is currently unavailable (returns `400 INVALID_ARGUMENT` or SDK errors) on public preview endpoints/models.
+  - **✅ Working Solution 1 (Native):** **Gemini Live API** (WebSockets). Code: `experiments/gemini_live_audio.py`. Generates native Gemini audio.
+  - **✅ Working Solution 2 (Standard):** **Google Cloud Text-to-Speech API**. Code: `experiments/standard_tts.py`.
+  - **❌ Blocked:** Native REST API (`generateContent` with `audio/wav`) is currently unavailable.
 - **Speech-to-Text (Transcription):**
   - **✅ Working Solution:** **Google Cloud Speech-to-Text V2** ("Chirp" models). Code: `experiments/chirp_speech_recognition.py` (Valid code, requires API enablement).
 - **Environment:**
@@ -47,12 +48,10 @@ See: [docs/gemini_multimodal_live.md](docs/gemini_multimodal_live.md)
 - **Environment:** Configured `pyproject.toml` and verified execution using `uv run`.
 
 ### Native Audio Investigation (Gemini 2.5)
-- **Status:** **Failed** / **Blocked**
-- **Attempts:**
-  1. `generateContent` with `response_mime_type="audio/wav"` -> Returns `400 INVALID_ARGUMENT` (MIME type not allowed).
-  2. `generateContent` with `response_modality="audio"` -> Returns SDK Validation Error (Parameter not recognized in `google-genai` 1.59.0).
-  3. Models tested: `gemini-2.5-flash-preview-tts`, `gemini-2.0-flash-exp`, `gemini-2.5-flash-native-audio-latest`.
-- **Conclusion:** Native audio generation is not currently accessible via the standard Python SDK `generateContent` method for these public model aliases. Use **Google Cloud TTS** (`standard_tts.py`) for reliable audio generation.
+- **Status:** **Success** (via Live API)
+- **Solution:** Created `experiments/gemini_live_audio.py` which uses the **Gemini Live API** (WebSockets) to stream and save audio.
+- **Model:** `gemini-2.0-flash-exp` (Live).
+- **Notes:** The REST API (`generateContent`) is blocked for audio, but the Live API works perfectly for generating "Native Audio" from text prompts.
 
 ## Completed Steps
 - [x] Create a simple `curl` example to convert text to audio (Gemini TTS). -> `experiments/text_to_audio.sh`
