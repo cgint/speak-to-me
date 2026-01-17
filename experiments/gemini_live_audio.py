@@ -37,7 +37,9 @@ async def live_audio_session() -> None:
         print("Connected. Sending text prompt...")
         
         # Send a text message to trigger speech
-        await session.send(input="Hello! Please speak this response clearly so I can save it to a file.", end_of_turn=True)
+        await session.send(input="Hello!", end_of_turn=False)
+        await session.send(input="Please speak the following text i give you so I can save it to a file.", end_of_turn=False)
+        await session.send(input="\"I am sure this will work.\"", end_of_turn=True)
 
         print("Listening for response...")
         
