@@ -44,7 +44,7 @@ async def play_audio_queue(queue: asyncio.Queue) -> None:
     except Exception as e:
         print(f"\nError in audio playback: {e}")
 
-async def live_audio_session(play_audio: bool = False, model_id: str = MODEL_ID) -> None:
+async def live_audio_session(play_audio: bool = False, save_audio: bool = True, model_id: str = MODEL_ID) -> None:
     if not API_KEY:
         print("Error: GEMINI_API_KEY not set.")
         return
@@ -54,7 +54,7 @@ async def live_audio_session(play_audio: bool = False, model_id: str = MODEL_ID)
     # Configure the session
     config = types.LiveConnectConfig(
         system_instruction="Read the user's text out loud exactly as is in natural speech. No greetings. No intro.",
-        response_modalities=["AUDIO"],
+        response_modalities=[types.Modality.AUDIO],
         speech_config=types.SpeechConfig(
             voice_config=types.VoiceConfig(
                 prebuilt_voice_config=types.PrebuiltVoiceConfig(voice_name="Puck")
@@ -75,6 +75,9 @@ async def live_audio_session(play_audio: bool = False, model_id: str = MODEL_ID)
         playback_queue = asyncio.Queue()
         playback_task = asyncio.create_task(play_audio_queue(playback_queue))
         print("Audio playback enabled (streaming).")
+    
+    if not save_audio:
+        print("Audio saving disabled.")
 
     async with client.aio.live.connect(model=model_id, config=config) as session:
         print("Connected. Sending text prompt...")
@@ -94,7 +97,8 @@ async def live_audio_session(play_audio: bool = False, model_id: str = MODEL_ID)
                                 if part.inline_data and part.inline_data.mime_type and part.inline_data.mime_type.startswith("audio"):
                                     if part.inline_data.data:
                                         chunk = part.inline_data.data
-                                        audio_chunks.append(chunk)
+                                        if save_audio:
+                                            audio_chunks.append(chunk)
                                         
                                         # Stream to player
                                         if playback_queue:
@@ -115,7 +119,7 @@ async def live_audio_session(play_audio: bool = False, model_id: str = MODEL_ID)
         await playback_task
 
     # Save audio
-    if audio_chunks:
+    if save_audio and audio_chunks:
         print(f"\nSaving {len(audio_chunks)} chunks to {OUTPUT_FILENAME}...")
         
         with wave.open(OUTPUT_FILENAME, 'wb') as wf:
@@ -125,14 +129,26 @@ async def live_audio_session(play_audio: bool = False, model_id: str = MODEL_ID)
             for chunk in audio_chunks:
                 wf.writeframes(chunk)
         print("Done.")
+    elif not save_audio:
+        print("\nDone (Not saved).")
     else:
         print("\nNo audio received.")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Gemini Live Audio Experiment")
     parser.add_argument("-i", "--interactive", action="store_true", help="Play audio stream in real-time")
+    parser.add_argument("-s", "--speak-only", action="store_true", help="Speak exclusively without saving to file")
     parser.add_argument("-o", "--old", action="store_true", help="Use old model (gemini-2.0-flash-exp)")
     args = parser.parse_args()
     
     selected_model = "gemini-2.0-flash-exp" if args.old else MODEL_ID
-    asyncio.run(live_audio_session(play_audio=args.interactive, model_id=selected_model))
+    
+    # Logic:
+    # -s implies interactive playback ON, saving OFF.
+    # -i implies interactive playback ON, saving ON (default).
+    # Default is interactive playback OFF, saving ON.
+    
+    play = args.interactive or args.speak_only
+    save = not args.speak_only
+    
+    asyncio.run(live_audio_session(play_audio=play, save_audio=save, model_id=selected_model))

@@ -46,6 +46,9 @@ We are currently in the active investigation phase:
     # Run with interactive playback (hear it while it saves)
     uv run experiments/gemini_live_audio.py -i
 
+    # Speak only (hear it, do not save to file)
+    uv run experiments/gemini_live_audio.py -s
+
     # Use the older Gemini 2.0 Flash Exp model
     uv run experiments/gemini_live_audio.py -i -o
     ```

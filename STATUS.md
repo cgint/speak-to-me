@@ -61,6 +61,7 @@ See: [docs/gemini_multimodal_live.md](docs/gemini_multimodal_live.md)
 - **Solution:** Created `experiments/gemini_live_audio.py`.
 - **Features:**
   - `-i` / `--interactive`: Real-time streaming audio playback.
+  - `-s` / `--speak-only`: Real-time playback ONLY (no file save).
   - `-o` / `--old`: Switch to `gemini-2.0-flash-exp`.
 - **Outcome:** Successfully streams and saves native Gemini audio. Recommended "Native Audio" path.
 
