@@ -47,11 +47,21 @@ See: [docs/gemini_multimodal_live.md](docs/gemini_multimodal_live.md)
 - **Success:** Created `experiments/standard_tts.py` using **Google Cloud Text-to-Speech API**. This successfully generates audio files from text, serving as the functional "Google model" solution while native Gemini audio is unavailable.
 - **Environment:** Configured `pyproject.toml` and verified execution using `uv run`.
 
-### Native Audio Investigation (Gemini 2.5)
-- **Status:** **Success** (via Live API)
-- **Solution:** Created `experiments/gemini_live_audio.py` which uses the **Gemini Live API** (WebSockets) to stream and save audio.
-- **Model:** `gemini-2.0-flash-exp` (Live).
-- **Notes:** The REST API (`generateContent`) is blocked for audio, but the Live API works perfectly for generating "Native Audio" from text prompts.
+### Native Audio Investigation: Gemini 2.5 (REST API)
+- **Status:** **Failed** / **Blocked**
+- **Method:** `generateContent` (REST)
+- **Attempts:**
+  1. `response_mime_type="audio/wav"` -> Returns `400 INVALID_ARGUMENT` (MIME type not allowed).
+  2. `response_modality="audio"` -> Returns SDK Validation Error.
+  3. Models tested: `gemini-2.5-flash-preview-tts`, `gemini-2.5-flash-native-audio-latest`.
+- **Conclusion:** Native audio generation via standard REST calls is currently not enabled for public Gemini 2.5 models.
+
+### Native Audio Investigation: Gemini 2.0 (Live API)
+- **Status:** **Success**
+- **Method:** **Gemini Live API** (WebSockets)
+- **Model:** `gemini-2.0-flash-exp`
+- **Solution:** Created `experiments/gemini_live_audio.py`.
+- **Outcome:** Successfully streams and saves native Gemini audio from text prompts. This is the recommended "Native Audio" path today.
 
 ## Completed Steps
 - [x] Create a simple `curl` example to convert text to audio (Gemini TTS). -> `experiments/text_to_audio.sh`
