@@ -62,8 +62,22 @@ See: [docs/gemini_multimodal_live.md](docs/gemini_multimodal_live.md)
 - **Features:**
   - `-i` / `--interactive`: Real-time streaming audio playback.
   - `-s` / `--speak-only`: Real-time playback ONLY (no file save).
+  - `-v` / `--voice`: Specify voice name (e.g., `-v Fenrir`).
+  - `-t` / `--text`: Specify text to speak (e.g., `-t "Hello world"`).
   - `-o` / `--old`: Switch to `gemini-2.0-flash-exp`.
 - **Outcome:** Successfully streams and saves native Gemini audio. Recommended "Native Audio" path.
+
+### Gemini Live API Configuration
+**Documentation:** [Google Cloud Vertex AI / Gemini API Docs](https://ai.google.dev/gemini-api/docs/multimodal-live)
+
+**Key `LiveConnectConfig` Parameters:**
+- **`response_modalities`**: `["AUDIO"]` (for speech) or `["TEXT"]`.
+- **`system_instruction`**: String to guide model behavior/persona (e.g., "You are a helpful assistant.").
+- **`speech_config`**: Control voice settings.
+  - `voice_config`: `prebuilt_voice_config` -> `voice_name`.
+  - **Available Voices:** `Puck` (Default), `Charon`, `Fenrir`, `Kore`, `Aoede`, `Leda`, `Orus`, `Zephyr`.
+- **`tools`**: List of tools for function calling (e.g., Google Search, Code Execution).
+- **`generation_config`**: Control generation parameters (temperature, top_p, etc.).
 
 ## Completed Steps
 - [x] Create a simple `curl` example to convert text to audio (Gemini TTS). -> `experiments/text_to_audio.sh`

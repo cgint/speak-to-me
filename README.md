@@ -49,6 +49,12 @@ We are currently in the active investigation phase:
     # Speak only (hear it, do not save to file)
     uv run experiments/gemini_live_audio.py -s
 
+    # Speak with a specific voice (e.g., Fenrir)
+    uv run experiments/gemini_live_audio.py -s -v Fenrir
+
+    # Speak specific text
+    uv run experiments/gemini_live_audio.py -s -t "Hello, I am Gemini."
+
     # Use the older Gemini 2.0 Flash Exp model
     uv run experiments/gemini_live_audio.py -i -o
     ```
