@@ -9,8 +9,7 @@ The objective of this project is to explore the frontier of interactive, statefu
 This repository contains a series of focused experiments investigating different components of the multimodal stack:
 
 *   **Speech-to-Text V2 (Chirp):** High-precision transcription using Google's Universal Speech Model (USM). See `experiments/chirp_speech_recognition.py`.
-*   **Gemini Live API:** Real-time, low-latency WebSocket interactions that allow for streaming audio back-and-forth. See `experiments/gemini_live_audio.py`.
-*   **Native Multimodal Generation:** Investigating Gemini 2.5's ability to generate native audio outputs directly from a model turn.
+*   **Gemini Live API:** Real-time, low-latency WebSocket interactions that allow for streaming audio back-and-forth. **Verified working** for generating native Gemini audio. See `experiments/gemini_live_audio.py`.
 *   **Standard Text-to-Speech:** Utilizing Google Cloud TTS (Standard/Neural2) as a high-quality, reliable fallback for speech generation. See `experiments/standard_tts.py`.
 *   **Audio Capture:** Implementing logic to buffer and save raw audio streams (e.g., PCM from Live API) into standard formats like WAV for persistent storage.
 
@@ -22,9 +21,9 @@ This repository contains a series of focused experiments investigating different
 ## 🚦 Current Status
 We are currently in the active investigation phase:
 *   ✅ **Transcription:** STT V2 Chirp models are integrated and functional.
+*   ✅ **Native Audio (Live):** The Gemini Live API (WebSockets) is working and successfully generates native audio responses from text prompts.
 *   ✅ **Reliable Speech:** Standard Google Cloud TTS is used for consistent audio generation.
-*   🔄 **Live Interaction:** Experiments with the Gemini Live API are ongoing to optimize latency and capture quality.
-*   ⚠️ **Native Audio:** Direct `audio/wav` generation via `generateContent` is currently being evaluated for availability across public preview endpoints.
+*   ❌ **Native Audio (REST):** Direct `audio/wav` generation via `generateContent` (REST API) is currently **unavailable/blocked** on public preview endpoints.
 
 ## 🚀 Getting Started
 1.  **Clone the repository.**

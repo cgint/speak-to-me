@@ -27,8 +27,8 @@
 - **General Rule:** Always use the most recent models available for the specific category.
 
 ## Analysis Status
-- [ ] Investigate Google Cloud Speech-to-Text V2 'Chirp' models.
-- [ ] Investigate programmatic storage of Multimodal/Audio responses from Gemini (Vertex AI / Gemini API).
+- [x] Investigate Google Cloud Speech-to-Text V2 'Chirp' models.
+- [x] Investigate programmatic storage of Multimodal/Audio responses from Gemini (Vertex AI / Gemini API).
 
 ## Findings
 
