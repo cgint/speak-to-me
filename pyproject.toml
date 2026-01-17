@@ -7,6 +7,8 @@ dependencies = [
     "google-cloud-speech",
     "google-cloud-texttospeech",
     "dotenv>=0.9.9",
+    "sounddevice",
+    "numpy",
 ]
 
 [dependency-groups]
