@@ -11,13 +11,13 @@ API_KEY = os.environ.get("GEMINI_API_KEY")
 MODEL_ID = "gemini-2.5-flash-native-audio-preview-12-2025" # Live API supports this model
 OUTPUT_FILENAME = "gemini_live_output.wav"
 
-async def play_audio_queue(queue: asyncio.Queue) -> None:
+async def play_audio_queue(queue: "asyncio.Queue[bytes | None]") -> None:
     """
     Consumes audio chunks from the queue and plays them using sounddevice.
     Run this as a background task.
     """
     try:
-        import sounddevice as sd
+        import sounddevice as sd # type: ignore
         import numpy as np
     except ImportError:
         print("Error: sounddevice and numpy are required for audio playback.")
@@ -67,8 +67,8 @@ async def live_audio_session(play_audio: bool = False, save_audio: bool = True, 
     audio_chunks: list[bytes] = []
     
     # Setup playback queue if requested
-    playback_queue: asyncio.Queue | None = None
-    playback_task: asyncio.Task | None = None
+    playback_queue: "asyncio.Queue[bytes | None] | None" = None
+    playback_task: "asyncio.Task[None] | None" = None
     
     if play_audio:
         playback_queue = asyncio.Queue()

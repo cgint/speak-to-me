@@ -1,4 +1,5 @@
 import os
+import traceback
 from google.cloud import speech_v2
 from google.api_core.client_options import ClientOptions
 from dotenv import load_dotenv
@@ -64,7 +65,7 @@ def transcribe_audio_chirp(audio_file_path: str, project_id: str, location: str 
         )
         # This will fail if it already exists, which is fine
         operation = client.create_recognizer(request=request)
-        recognizer = operation.result()
+        operation.result() # type: ignore
         print("Recognizer created.")
     except Exception as e:
         if "409" in str(e):
@@ -86,8 +87,6 @@ def transcribe_audio_chirp(audio_file_path: str, project_id: str, location: str 
         print("-" * 20)
         print(f"Transcript: {result.alternatives[0].transcript}")
         print(f"Confidence: {result.alternatives[0].confidence}")
-
-import traceback
 
 if __name__ == "__main__":
     try:
