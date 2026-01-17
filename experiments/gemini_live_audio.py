@@ -7,7 +7,7 @@ from google.genai import types
 # Configuration
 # Use the API key from environment
 API_KEY = os.environ.get("GEMINI_API_KEY")
-MODEL_ID = "gemini-2.0-flash-exp" # Live API supports this model
+MODEL_ID = "gemini-2.5-flash-native-audio-preview-12-2025" # Live API supports this model
 OUTPUT_FILENAME = "gemini_live_output.wav"
 
 async def live_audio_session() -> None:
