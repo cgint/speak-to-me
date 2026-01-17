@@ -20,6 +20,8 @@ async def live_audio_session() -> None:
     # Configure the session
     # We want audio output.
     config = types.LiveConnectConfig(
+        # system_instruction="Read the user's text exactly. No greetings. No intro.",
+        system_instruction="Read the user's text out loud exactly as is in natural speech. No greetings. No intro.",
         response_modalities=["AUDIO"], # type: ignore # MyPy expects list[Modality] but string "AUDIO" is accepted by SDK
         speech_config=types.SpeechConfig(
             voice_config=types.VoiceConfig(
@@ -37,9 +39,7 @@ async def live_audio_session() -> None:
         print("Connected. Sending text prompt...")
         
         # Send a text message to trigger speech
-        await session.send(input="Hello!", end_of_turn=False)
-        await session.send(input="Please speak the following text i give you so I can save it to a file.", end_of_turn=False)
-        await session.send(input="\"I am sure this will work.\"", end_of_turn=True)
+        await session.send_realtime_input(text="I am pretty sure this will work.")
 
         print("Listening for response...")
         
