@@ -38,6 +38,17 @@ We are currently in the active investigation phase:
     ```bash
     uv run experiments/standard_tts.py
     ```
+5.  **Try Native Audio (Gemini Live):**
+    ```bash
+    # Run with default settings (saves to file)
+    uv run experiments/gemini_live_audio.py
+
+    # Run with interactive playback (hear it while it saves)
+    uv run experiments/gemini_live_audio.py -i
+
+    # Use the older Gemini 2.0 Flash Exp model
+    uv run experiments/gemini_live_audio.py -i -o
+    ```
 
 ---
 *This is an experimental repository. If you've stumbled upon this, feel free to explore the `experiments/` and `docs/` folders to see our findings and code samples.*

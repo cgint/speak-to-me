@@ -57,9 +57,12 @@ See: [docs/gemini_multimodal_live.md](docs/gemini_multimodal_live.md)
 ### Native Audio Investigation: Gemini 2.0 (Live API)
 - **Status:** **Success**
 - **Method:** **Gemini Live API** (WebSockets)
-- **Model:** `gemini-2.5-flash-native-audio-preview-12-2025` (`gemini-2.0-flash-exp` does work as well)
-- **Solution:** Created `experiments/gemini_live_audio.py` (Supports `-i` for live playback while saving to file).
-- **Outcome:** Successfully streams and saves native Gemini audio from text prompts. This is the recommended "Native Audio" path today.
+- **Model:** `gemini-2.5-flash-native-audio-preview-12-2025` (Default) or `gemini-2.0-flash-exp` (via `-o` flag)
+- **Solution:** Created `experiments/gemini_live_audio.py`.
+- **Features:**
+  - `-i` / `--interactive`: Real-time streaming audio playback.
+  - `-o` / `--old`: Switch to `gemini-2.0-flash-exp`.
+- **Outcome:** Successfully streams and saves native Gemini audio. Recommended "Native Audio" path.
 
 ## Completed Steps
 - [x] Create a simple `curl` example to convert text to audio (Gemini TTS). -> `experiments/text_to_audio.sh`

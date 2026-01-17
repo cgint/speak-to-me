@@ -44,7 +44,7 @@ async def play_audio_queue(queue: asyncio.Queue) -> None:
     except Exception as e:
         print(f"\nError in audio playback: {e}")
 
-async def live_audio_session(play_audio: bool = False) -> None:
+async def live_audio_session(play_audio: bool = False, model_id: str = MODEL_ID) -> None:
     if not API_KEY:
         print("Error: GEMINI_API_KEY not set.")
         return
@@ -62,7 +62,7 @@ async def live_audio_session(play_audio: bool = False) -> None:
         )
     )
 
-    print(f"Connecting to Live API with model {MODEL_ID}...")
+    print(f"Connecting to Live API with model {model_id}...")
     
     # Store audio chunks for saving
     audio_chunks: list[bytes] = []
@@ -76,7 +76,7 @@ async def live_audio_session(play_audio: bool = False) -> None:
         playback_task = asyncio.create_task(play_audio_queue(playback_queue))
         print("Audio playback enabled (streaming).")
 
-    async with client.aio.live.connect(model=MODEL_ID, config=config) as session:
+    async with client.aio.live.connect(model=model_id, config=config) as session:
         print("Connected. Sending text prompt...")
         
         # Send a text message to trigger speech
@@ -131,6 +131,8 @@ async def live_audio_session(play_audio: bool = False) -> None:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Gemini Live Audio Experiment")
     parser.add_argument("-i", "--interactive", action="store_true", help="Play audio stream in real-time")
+    parser.add_argument("-o", "--old", action="store_true", help="Use old model (gemini-2.0-flash-exp)")
     args = parser.parse_args()
     
-    asyncio.run(live_audio_session(play_audio=args.interactive))
+    selected_model = "gemini-2.0-flash-exp" if args.old else MODEL_ID
+    asyncio.run(live_audio_session(play_audio=args.interactive, model_id=selected_model))
