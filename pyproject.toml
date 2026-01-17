@@ -6,6 +6,7 @@ dependencies = [
     "google-genai",
     "google-cloud-speech",
     "google-cloud-texttospeech",
+    "dotenv>=0.9.9",
 ]
 
 [dependency-groups]

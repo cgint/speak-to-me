@@ -10,6 +10,11 @@
 ## Usage
 To use Chirp models, you must use the **Speech-to-Text V2 API**.
 
+### Clarification: Gemini API vs. Chirp
+**Chirp is NOT available directly via the Gemini API (`generativelanguage.googleapis.com`).**
+- **Chirp:** Accessed via `google.cloud.speech_v2`. Best for dedicated, high-fidelity transcription with specific features (timestamps, word confidence).
+- **Gemini API:** Uses its own internal multimodal audio understanding (via `generateContent`). This is powerful but does not expose the specific "Chirp" model controls or metadata.
+
 ### Requirements
 - **Project:** `gen-lang-client-0910640178` (from your env)
 - **Location:** `europe-west1` (Global endpoints may also work, but regional is often preferred for V2)

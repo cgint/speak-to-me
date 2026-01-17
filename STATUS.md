@@ -37,24 +37,22 @@ Detailed analysis has been moved to specific documentation files:
 ### 1. Google Cloud Speech-to-Text V2 & "Chirp"
 See: [docs/speech_to_text_v2_chirp.md](docs/speech_to_text_v2_chirp.md)
 - **Summary:** Chirp 2/3 models available via V2 API. Best for high-fidelity ASR.
-- **Status:** Code example `experiments/chirp_speech_recognition.py` created and verified (requires API enablement).
+- **Status:** Code example `experiments/chirp_speech_recognition.py` created.
+- **Blocker:** Returns `404 Requested entity was not found` during `client.recognize` call, even though `list_recognizers` confirms the resource exists at the path. Might be a regional propagation issue or specific project configuration quirk.
+- **Action:** Code is valid V2 usage. Verify Recognizer path/project number logic in a fully interactive console session.
 
 ### 2. Google Interactions API / Gemini Multimodal
 See: [docs/gemini_multimodal_live.md](docs/gemini_multimodal_live.md)
 - **Summary:** Gemini 2.5 Flash / Pro (Preview) models theoretically support native TTS.
-- **Status:** `experiments/gemini_audio_server.py` and `text_to_audio.sh` created using `gemini-2.5-flash-native-audio-latest` and `gemini-2.5-pro-preview-tts`. Both currently return `400 INVALID_ARGUMENT` for `audio/wav` output, suggesting the feature is restricted or requires specific allowlisting on the `generateContent` endpoint for the current API key tier.
-- **Update:** Tested on Vertex AI (`us-central1`, `gemini-2.5-flash-preview-tts`, `gemini-2.0-flash-exp`) with the same `400 INVALID_ARGUMENT` or `404 NOT_FOUND` results.
-- **Success:** Created `experiments/standard_tts.py` using **Google Cloud Text-to-Speech API**. This successfully generates audio files from text, serving as the functional "Google model" solution while native Gemini audio is unavailable.
-- **Environment:** Configured `pyproject.toml` and verified execution using `uv run`.
+- **Status:** REST attempts failed (see below). Live API succeeded (see below).
+- **Update:** `standard_tts.py` created as the reliable workaround.
 
 ### Native Audio Investigation: Gemini 2.5 (REST API)
 - **Status:** **Failed** / **Blocked**
 - **Method:** `generateContent` (REST)
-- **Attempts:**
-  1. `response_mime_type="audio/wav"` -> Returns `400 INVALID_ARGUMENT` (MIME type not allowed).
-  2. `response_modality="audio"` -> Returns SDK Validation Error.
-  3. Models tested: `gemini-2.5-flash-preview-tts`, `gemini-2.5-flash-native-audio-latest`.
-- **Conclusion:** Native audio generation via standard REST calls is currently not enabled for public Gemini 2.5 models.
+- **Specific Error:** `400 INVALID_ARGUMENT` - "GenerateContentRequest.generation_config.response_mime_type: allowed mimetypes are text/plain..."
+- **Root Cause:** The public API endpoint for Gemini 2.5 models currently restricts audio generation via REST.
+- **Action:** Use the **Gemini Live API** (WebSockets) for native audio (see below) or Google Cloud TTS.
 
 ### Native Audio Investigation: Gemini 2.0 (Live API)
 - **Status:** **Success**
