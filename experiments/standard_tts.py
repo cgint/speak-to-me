@@ -1,7 +1,7 @@
 import os
 from google.cloud import texttospeech
 
-def generate_audio_standard(text, output_file="standard_tts_output.wav"):
+def generate_audio_standard(text: str, output_file: str = "standard_tts_output.wav") -> None:
     """
     Generates audio from text using Google Cloud Text-to-Speech API.
     """

@@ -2,7 +2,7 @@ import os
 from google.cloud import speech_v2
 from google.api_core.client_options import ClientOptions
 
-def transcribe_audio_chirp(audio_file_path, project_id, location="europe-west1"):
+def transcribe_audio_chirp(audio_file_path: str, project_id: str, location: str = "europe-west1") -> None:
     """
     Transcribes audio using the Google Cloud Speech-to-Text V2 'Chirp' model.
     """

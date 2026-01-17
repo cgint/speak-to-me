@@ -2,7 +2,7 @@ import os
 from google import genai
 from google.genai import types
 
-def generate_audio(text, output_file="gemini_native_output_aistudio.wav"):
+def generate_audio(text: str, output_file: str = "gemini_native_output_aistudio.wav") -> None:
     """
     Generates audio from text using Gemini API (AI Studio) with a specific model.
     """
@@ -32,9 +32,9 @@ def generate_audio(text, output_file="gemini_native_output_aistudio.wav"):
         )
         
         # Check for audio data
-        if response.candidates and response.candidates[0].content.parts:
+        if response.candidates and response.candidates[0].content and response.candidates[0].content.parts:
             part = response.candidates[0].content.parts[0]
-            if part.inline_data:
+            if part.inline_data and part.inline_data.data:
                 audio_data = part.inline_data.data
                 with open(output_file, "wb") as f:
                     f.write(audio_data)

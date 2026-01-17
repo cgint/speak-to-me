@@ -10,7 +10,7 @@ API_KEY = os.environ.get("GEMINI_API_KEY")
 MODEL_ID = "gemini-2.0-flash-exp" # Live API supports this model
 OUTPUT_FILENAME = "gemini_live_output.wav"
 
-async def live_audio_session():
+async def live_audio_session() -> None:
     if not API_KEY:
         print("Error: GEMINI_API_KEY not set.")
         return
@@ -20,7 +20,7 @@ async def live_audio_session():
     # Configure the session
     # We want audio output.
     config = types.LiveConnectConfig(
-        response_modalities=["AUDIO"], # Request audio output
+        response_modalities=["AUDIO"], # type: ignore # MyPy expects list[Modality] but string "AUDIO" is accepted by SDK
         speech_config=types.SpeechConfig(
             voice_config=types.VoiceConfig(
                 prebuilt_voice_config=types.PrebuiltVoiceConfig(voice_name="Puck")
@@ -31,7 +31,7 @@ async def live_audio_session():
     print(f"Connecting to Live API with model {MODEL_ID}...")
     
     # Store audio chunks
-    audio_chunks = []
+    audio_chunks: list[bytes] = []
     
     async with client.aio.live.connect(model=MODEL_ID, config=config) as session:
         print("Connected. Sending text prompt...")
@@ -53,10 +53,13 @@ async def live_audio_session():
                 # Based on typical Live API responses:
                 if response.server_content:
                     if response.server_content.model_turn:
-                        for part in response.server_content.model_turn.parts:
-                            if part.inline_data and part.inline_data.mime_type.startswith("audio"):
-                                audio_chunks.append(part.inline_data.data)
-                                print(".", end="", flush=True)
+                        parts = response.server_content.model_turn.parts
+                        if parts:
+                            for part in parts:
+                                if part.inline_data and part.inline_data.mime_type and part.inline_data.mime_type.startswith("audio"):
+                                    if part.inline_data.data:
+                                        audio_chunks.append(part.inline_data.data)
+                                        print(".", end="", flush=True)
                     
                     if response.server_content.turn_complete:
                         print("\nTurn complete.")
