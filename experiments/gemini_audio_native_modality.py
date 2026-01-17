@@ -23,7 +23,7 @@ def generate_audio_native(text: str, output_file: str = "gemini_native_output.wa
             model=model_name,
             contents=text,
             config=types.GenerateContentConfig(
-                response_modalities=["AUDIO"], # type: ignore
+                response_modalities=["AUDIO"],
                 speech_config=types.SpeechConfig(
                     voice_config=types.VoiceConfig(prebuilt_voice_config=types.PrebuiltVoiceConfig(voice_name="Puck"))
                 )
@@ -55,6 +55,13 @@ def generate_audio_native(text: str, output_file: str = "gemini_native_output.wa
             print(f"Audio saved to {output_file}")
         else:
             print("Failed to retrieve audio data.")
+
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        # Print full error details if possible
+        if hasattr(e, 'message'):
+            print(f"Error message: {e.message}")
+
 
 
 if __name__ == "__main__":
