@@ -22,6 +22,7 @@ dev = [
 speak = "experiments.gemini_live_audio:main"
 speaks = "experiments.gemini_live_audio:speak_only_main"
 speakf = "experiments.gemini_live_audio:speak_file_main"
+speakme = "experiments.gemini_live_audio:speak_file_speak_me"
 
 [build-system]
 requires = ["setuptools>=68"]

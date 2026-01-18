@@ -184,5 +184,10 @@ def speak_file_main() -> None:
     main()
 
 
+def speak_file_speak_me() -> None:
+    sys.argv = [sys.argv[0], "-s", "-f", "speak_me.txt", *sys.argv[1:]]
+    main()
+
+
 if __name__ == "__main__":
     main()
