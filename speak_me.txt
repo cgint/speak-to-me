@@ -1,0 +1,6 @@
+Where this leaves us
+This leaves us at a place where the best thing to do for our codebase is to shut down external contributions, at least until GitHub offers better support for controlling who can contribute, when, and where. Assuming the social contract of code contribution remains unchanged, then we need better tools to maintain the peace.
+
+But if you ask me, the bigger threat to GitHub's model comes from the rapid devaluation of someone else's code. When code was hard to write and low-effort work was easy to identify, it was worth the cost to review the good stuff. If code is easy to write and bad work is virtually indistinguishable from good, then the value of external contribution is probably less than zero.
+
+If that's the case, which I'm starting to think it is, then it's better to limit community contribution to the places it still matters: reporting, discussion, perspective, and care. Don't worry about the code, I can push the button myself.

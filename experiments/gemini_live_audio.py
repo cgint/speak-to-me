@@ -140,9 +140,19 @@ if __name__ == "__main__":
     parser.add_argument("-o", "--old", action="store_true", help="Use old model (gemini-2.0-flash-exp)")
     parser.add_argument("-v", "--voice", type=str, default="Puck", help="Voice name (e.g., Puck, Charon, Fenrir, Kore, Aoede, Leda, Orus, Zephyr)")
     parser.add_argument("-t", "--text", type=str, default="I am pretty sure this will work.", help="Text to speak")
+    parser.add_argument("-f", "--file", type=str, help="Path to a text file whose contents will be spoken")
     args = parser.parse_args()
     
     selected_model = "gemini-2.0-flash-exp" if args.old else MODEL_ID
+    
+    text_prompt = args.text
+    if args.file:
+        try:
+            with open(args.file, "r", encoding="utf-8") as handle:
+                text_prompt = handle.read()
+        except Exception as exc:
+            print(f"Error: failed to read file '{args.file}': {exc}")
+            raise SystemExit(1)
     
     # Logic:
     # -s implies interactive playback ON, saving OFF.
@@ -152,4 +162,4 @@ if __name__ == "__main__":
     play = args.interactive or args.speak_only
     save = not args.speak_only
     
-    asyncio.run(live_audio_session(play_audio=play, save_audio=save, model_id=selected_model, voice_name=args.voice, text_prompt=args.text))
+    asyncio.run(live_audio_session(play_audio=play, save_audio=save, model_id=selected_model, voice_name=args.voice, text_prompt=text_prompt))
