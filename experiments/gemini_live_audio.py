@@ -2,6 +2,7 @@ import asyncio
 import os
 import wave
 import argparse
+import sys
 from google import genai
 from google.genai import types
 
@@ -133,7 +134,7 @@ async def live_audio_session(play_audio: bool = False, save_audio: bool = True, 
     else:
         print("\nNo audio received.")
 
-if __name__ == "__main__":
+def main() -> None:
     parser = argparse.ArgumentParser(description="Gemini Live Audio Experiment")
     parser.add_argument("-i", "--interactive", action="store_true", help="Play audio stream in real-time")
     parser.add_argument("-s", "--speak-only", action="store_true", help="Speak exclusively without saving to file")
@@ -142,9 +143,9 @@ if __name__ == "__main__":
     parser.add_argument("-t", "--text", type=str, default="I am pretty sure this will work.", help="Text to speak")
     parser.add_argument("-f", "--file", type=str, help="Path to a text file whose contents will be spoken")
     args = parser.parse_args()
-    
+
     selected_model = "gemini-2.0-flash-exp" if args.old else MODEL_ID
-    
+
     text_prompt = args.text
     if args.file:
         try:
@@ -153,13 +154,35 @@ if __name__ == "__main__":
         except Exception as exc:
             print(f"Error: failed to read file '{args.file}': {exc}")
             raise SystemExit(1)
-    
+
     # Logic:
     # -s implies interactive playback ON, saving OFF.
     # -i implies interactive playback ON, saving ON (default).
     # Default is interactive playback OFF, saving ON.
-    
+
     play = args.interactive or args.speak_only
     save = not args.speak_only
-    
-    asyncio.run(live_audio_session(play_audio=play, save_audio=save, model_id=selected_model, voice_name=args.voice, text_prompt=text_prompt))
+
+    asyncio.run(
+        live_audio_session(
+            play_audio=play,
+            save_audio=save,
+            model_id=selected_model,
+            voice_name=args.voice,
+            text_prompt=text_prompt,
+        )
+    )
+
+
+def speak_only_main() -> None:
+    sys.argv = [sys.argv[0], "-s", "-t", *sys.argv[1:]]
+    main()
+
+
+def speak_file_main() -> None:
+    sys.argv = [sys.argv[0], "-s", "-f", *sys.argv[1:]]
+    main()
+
+
+if __name__ == "__main__":
+    main()

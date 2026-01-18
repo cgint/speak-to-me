@@ -17,3 +17,15 @@ dev = [
     "ruff",
     "mypy"
 ]
+
+[project.scripts]
+speak = "experiments.gemini_live_audio:main"
+speaks = "experiments.gemini_live_audio:speak_only_main"
+speakf = "experiments.gemini_live_audio:speak_file_main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["experiments"]
