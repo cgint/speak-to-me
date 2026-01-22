@@ -53,7 +53,7 @@ async def live_audio_session(play_audio: bool = False, save_audio: bool = True, 
 
     # Configure the session
     config = types.LiveConnectConfig(
-        system_instruction="Read the user's text out loud exactly as is in natural speech. No greetings. No intro.",
+        system_instruction="You are a specialized Text-to-Speech (TTS) engine. Your ONLY job is to speak the text the user provides exactly as written. Do not reply to the text. Do not greet the user. Do not answer questions. Just read the text out loud.",
         response_modalities=[types.Modality.AUDIO],
         speech_config=types.SpeechConfig(
             voice_config=types.VoiceConfig(
