@@ -44,7 +44,7 @@ async def play_audio_queue(queue: "asyncio.Queue[bytes | None]") -> None:
     except Exception as e:
         print(f"\nError in audio playback: {e}")
 
-async def live_audio_session(play_audio: bool = False, save_audio: bool = True, model_id: str = MODEL_ID, voice_name: str = "Puck", text_prompt: str = "I am pretty sure this will work.") -> None:
+async def live_audio_session(play_audio: bool = False, save_audio: bool = True, model_id: str = MODEL_ID, voice_name: str = "Puck", text_to_speak_as_is: str = "I am pretty sure this will work.") -> None:
     if not API_KEY:
         print("Error: GEMINI_API_KEY not set.")
         return
@@ -83,9 +83,9 @@ async def live_audio_session(play_audio: bool = False, save_audio: bool = True, 
         print("Connected. Sending text prompt...")
         
         # Send a text message to trigger speech
-        await session.send_realtime_input(text=text_prompt)
+        await session.send_realtime_input(text=text_to_speak_as_is)
 
-        print(f"Listening for response to: '{text_prompt}'")
+        print(f"Listening for response to: '{text_to_speak_as_is}'")
         
         try:
             async for response in session.receive():
@@ -146,11 +146,11 @@ def main() -> None:
 
     selected_model = "gemini-2.0-flash-exp" if args.old else MODEL_ID
 
-    text_prompt = args.text
+    text_to_speak_as_is = args.text
     if args.file:
         try:
             with open(args.file, "r", encoding="utf-8") as handle:
-                text_prompt = handle.read()
+                text_to_speak_as_is = handle.read()
         except Exception as exc:
             print(f"Error: failed to read file '{args.file}': {exc}")
             raise SystemExit(1)
@@ -169,7 +169,7 @@ def main() -> None:
             save_audio=save,
             model_id=selected_model,
             voice_name=args.voice,
-            text_prompt=text_prompt,
+            text_to_speak_as_is=text_to_speak_as_is,
         )
     )
 
