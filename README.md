@@ -59,5 +59,26 @@ We are currently in the active investigation phase:
     uv run experiments/gemini_live_audio.py -i -o
     ```
 
+## 🗣️ CLI Shortcuts
+For convenience, this project defines several shortcuts in `pyproject.toml` to quickly use the Text-to-Speech capabilities. You can run these using `uv run`.
+
+### `speaks` (Speak Text)
+Immediately speaks the text provided as an argument (Interactive mode).
+```bash
+uv run speaks "Hello, I can speak this text immediately."
+```
+
+### `speakf` (Speak File)
+Reads and speaks the contents of a text file.
+```bash
+uv run speakf path/to/my_text.txt
+```
+
+### `speakme` (Speak Default File)
+Speaks the contents of the `speak_me.txt` file located in the current directory.
+```bash
+uv run speakme
+```
+
 ---
 *This is an experimental repository. If you've stumbled upon this, feel free to explore the `experiments/` and `docs/` folders to see our findings and code samples.*
