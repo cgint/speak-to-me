@@ -135,13 +135,17 @@ async def live_audio_session(play_audio: bool = False, save_audio: bool = True, 
         print("\nNo audio received.")
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Gemini Live Audio Experiment")
-    parser.add_argument("-i", "--interactive", action="store_true", help="Play audio stream in real-time")
-    parser.add_argument("-s", "--speak-only", action="store_true", help="Speak exclusively without saving to file")
-    parser.add_argument("-o", "--old", action="store_true", help="Use old model (gemini-2.0-flash-exp)")
-    parser.add_argument("-v", "--voice", type=str, default="Puck", help="Voice name (e.g., Puck, Charon, Fenrir, Kore, Aoede, Leda, Orus, Zephyr)")
-    parser.add_argument("-t", "--text", type=str, default="I am pretty sure this will work.", help="Text to speak")
-    parser.add_argument("-f", "--file", type=str, help="Path to a text file whose contents will be spoken")
+    parser = argparse.ArgumentParser(
+        description="Text-to-speech using Gemini Live API. Speaks the given text or file contents aloud.",
+        epilog="Examples:\n  speak -s -t 'Hello world'     # Speak text, play only (no file saved)\n  speak -s -f notes.txt       # Speak file contents\n  speak -v Charon -t 'Hi'    # Use voice 'Charon'",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+    parser.add_argument("-i", "--interactive", action="store_true", help="Play audio in real-time while generating (streaming playback)")
+    parser.add_argument("-s", "--speak-only", action="store_true", help="Play audio only; do not save to a file")
+    parser.add_argument("-o", "--old", action="store_true", help="Use older model gemini-2.0-flash-exp instead of default")
+    parser.add_argument("-v", "--voice", type=str, default="Puck", help="Voice: Puck, Charon, Fenrir, Kore, Aoede, Leda, Orus, Zephyr")
+    parser.add_argument("-t", "--text", type=str, default="I am pretty sure this will work.", help="Text to speak (ignored if -f is used)")
+    parser.add_argument("-f", "--file", type=str, help="Read text from this file and speak its contents")
     args = parser.parse_args()
 
     selected_model = "gemini-2.0-flash-exp" if args.old else MODEL_ID
