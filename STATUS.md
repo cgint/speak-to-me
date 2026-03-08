@@ -2,9 +2,14 @@
 
 ## 🚨 Current Status & Key Findings (Updated)
 - **Text-to-Speech (Audio Generation):**
-  - **✅ Working Solution 1 (Native):** **Gemini Live API** (WebSockets). Code: `experiments/gemini_live_audio.py`. Generates native Gemini audio.
-  - **✅ Working Solution 2 (Standard):** **Google Cloud Text-to-Speech API**. Code: `experiments/standard_tts.py`.
-  - **❌ Blocked:** Native REST API (`generateContent` with `audio/wav`) is currently unavailable.
+  - **✅ Working Solution 1 (Streaming/Low latency):** **Gemini Live API** (WebSockets). Code: `experiments/gemini_live_audio.py`. Streams audio chunks for fast time-to-first-audio.
+  - **✅ Working Solution 2 (Non-Live / GenerateContent):** **Gemini 2.5 TTS preview models** via `generate_content` with `response_modalities=["AUDIO"]`.
+    - Audio comes back as raw PCM (e.g. `audio/L16;codec=pcm;rate=24000`) and must be wrapped into WAV for easy playback.
+    - Code: `experiments/gemini_3_text_then_25_tts.py` (pipeline + WAV writing) and `experiments/gemini_31_flash_lite_audio_out.py` (probe).
+  - **✅ Working Solution 3 (Standard):** **Google Cloud Text-to-Speech API**. Code: `experiments/standard_tts.py`.
+  - **❌ Still blocked / not supported:**
+    - Requesting audio via `generation_config.response_mime_type="audio/wav"` (GenerateContent only allows text/json/xml/yaml/enum mime types).
+    - **Gemini 3.x models** (text-only) cannot generate audio via GenerateContent.
 - **Speech-to-Text (Transcription):**
   - **✅ Working Solution:** **Google Cloud Speech-to-Text V2** ("Chirp" models). Code: `experiments/chirp_speech_recognition.py` (Valid code, requires API enablement).
 - **Environment:**
@@ -43,16 +48,24 @@ See: [docs/speech_to_text_v2_chirp.md](docs/speech_to_text_v2_chirp.md)
 
 ### 2. Google Interactions API / Gemini Multimodal
 See: [docs/gemini_multimodal_live.md](docs/gemini_multimodal_live.md)
-- **Summary:** Gemini 2.5 Flash / Pro (Preview) models theoretically support native TTS.
-- **Status:** REST attempts failed (see below). Live API succeeded (see below).
-- **Update:** `standard_tts.py` created as the reliable workaround.
+- **Summary:** Gemini Live supports native streaming audio; GenerateContent supports non-Live audio output via the dedicated 2.5 TTS preview models.
+- **Status:**
+  - Live API succeeded (see below).
+  - GenerateContent TTS succeeded (see below).
+  - Only the `response_mime_type="audio/wav"` approach is rejected.
+- **Update:** `standard_tts.py` remains a reliable fallback / alternative.
 
-### Native Audio Investigation: Gemini 2.5 (REST API)
-- **Status:** **Failed** / **Blocked**
-- **Method:** `generateContent` (REST)
-- **Specific Error:** `400 INVALID_ARGUMENT` - "GenerateContentRequest.generation_config.response_mime_type: allowed mimetypes are text/plain..."
-- **Root Cause:** The public API endpoint for Gemini 2.5 models currently restricts audio generation via REST.
-- **Action:** Use the **Gemini Live API** (WebSockets) for native audio (see below) or Google Cloud TTS.
+### Native Audio Investigation: Gemini 2.5 (GenerateContent / non-Live)
+- **Status:** **Success** (with the right config)
+- **Method:** `generate_content` (Gemini API / v1beta via `google-genai`)
+- **Works when:** using `GenerateContentConfig(response_modalities=["AUDIO"], speech_config=...)` **with** a 2.5 TTS preview model (e.g. `gemini-2.5-flash-preview-tts`, `gemini-2.5-pro-preview-tts`).
+- **Audio format returned:** typically raw PCM16 with mime like `audio/L16;codec=pcm;rate=24000`.
+  - **Implication:** you must wrap PCM in a WAV container (we do this in `experiments/gemini_3_text_then_25_tts.py`).
+- **Not supported:** requesting audio via `generation_config.response_mime_type="audio/wav"`.
+  - This yields `400 INVALID_ARGUMENT` listing only text/json/xml/yaml/enum mime types.
+- **New experiment scripts:**
+  - `experiments/gemini_31_flash_lite_audio_out.py` (probe audio output across models; extracts inline audio bytes)
+  - `experiments/gemini_3_text_then_25_tts.py` (Gemini 3 text → 2.5 TTS → WAV; optional `--verify` transcription)
 
 ### Native Audio Investigation: Gemini 2.0 (Live API)
 - **Status:** **Success**
