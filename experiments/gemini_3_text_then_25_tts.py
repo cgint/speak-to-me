@@ -32,6 +32,7 @@ from __future__ import annotations
 import argparse
 import os
 import re
+import sys
 import wave
 from dataclasses import dataclass
 from typing import Iterable
@@ -156,7 +157,63 @@ def _transcribe_wav(client: genai.Client, *, model: str, wav_path: str) -> str:
     return _extract_text(resp)
 
 
+def _client_for_api_version(api_version: str) -> genai.Client:
+    api_key = _get_api_key()
+    if not api_key:
+        raise SystemExit("Error: GEMINI_API_KEY or GOOGLE_API_KEY must be set")
+    return genai.Client(api_key=api_key, http_options={"api_version": api_version})
+
+
+def synthesize_tts_to_wav(
+    *,
+    client: genai.Client,
+    tts_model: str,
+    voice: str,
+    text_to_speak: str,
+    output_wav: str,
+    verify: bool = False,
+    verify_model: str = DEFAULT_VERIFY_MODEL,
+) -> None:
+    # Empirical behavior: the TTS preview model sometimes errors if given only the transcript.
+    # A tiny wrapper prompt nudges it into TTS mode.
+    tts_input = f"Transcript:\n{text_to_speak.strip()}"
+
+    tts_resp = client.models.generate_content(
+        model=tts_model,
+        contents=tts_input,
+        config=types.GenerateContentConfig(
+            response_modalities=["AUDIO"],
+            speech_config=types.SpeechConfig(
+                voice_config=types.VoiceConfig(
+                    prebuilt_voice_config=types.PrebuiltVoiceConfig(voice_name=voice)
+                )
+            ),
+        ),
+    )
+
+    audio_bytes, mime_type = _extract_audio_bytes(tts_resp)
+    if not audio_bytes:
+        raise SystemExit("No audio bytes found in TTS response")
+
+    fmt = _parse_pcm_format_from_mime(mime_type)
+    _write_wav_pcm16(output_wav, audio_bytes, fmt)
+
+    print(f"Wrote WAV: {output_wav}")
+    if mime_type:
+        print(f"TTS mime_type: {mime_type}")
+    print(f"Assumed PCM format: {fmt.sample_rate_hz} Hz, {fmt.channels}ch, 16-bit")
+
+    if verify:
+        print()
+        print("Verification: transcribing generated WAV...")
+        transcript = _transcribe_wav(client, model=verify_model, wav_path=output_wav)
+        print("Transcript:")
+        print(transcript)
+
+
 def main() -> None:
+    """Pipeline mode: Gemini 3 generates transcript text, then 2.5 TTS synthesizes to WAV."""
+
     p = argparse.ArgumentParser(description="Gemini 3 text -> Gemini 2.5 TTS (GenerateContent) -> WAV")
 
     p.add_argument("-p", "--prompt", required=True, help="Prompt for Gemini 3 to generate the text that will be spoken")
@@ -184,13 +241,8 @@ def main() -> None:
 
     args = p.parse_args()
 
-    api_key = _get_api_key()
-    if not api_key:
-        raise SystemExit("Error: GEMINI_API_KEY or GOOGLE_API_KEY must be set")
+    client = _client_for_api_version(args.api_version)
 
-    client = genai.Client(api_key=api_key, http_options={"api_version": args.api_version})
-
-    # Step 1: Generate text with Gemini 3
     print("Step 1/2: generating text...")
     text_resp = client.models.generate_content(
         model=args.text_model,
@@ -212,45 +264,97 @@ def main() -> None:
     print(text_to_speak)
     print()
 
-    # Step 2: Synthesize speech with Gemini 2.5 TTS preview
     print("Step 2/2: synthesizing audio...")
-
-    # Empirical behavior: the TTS preview model sometimes errors if given only the transcript
-    # (complaining it "tried to generate text"). A small wrapper prompt nudges it into TTS mode.
-    # We keep the wrapper *minimal* to reduce the risk of it being spoken.
-    tts_input = f"Transcript:\n{text_to_speak}"
-
-    tts_resp = client.models.generate_content(
-        model=args.tts_model,
-        contents=tts_input,
-        config=types.GenerateContentConfig(
-            response_modalities=["AUDIO"],
-            speech_config=types.SpeechConfig(
-                voice_config=types.VoiceConfig(
-                    prebuilt_voice_config=types.PrebuiltVoiceConfig(voice_name=args.voice)
-                )
-            ),
-        ),
+    synthesize_tts_to_wav(
+        client=client,
+        tts_model=args.tts_model,
+        voice=args.voice,
+        text_to_speak=text_to_speak,
+        output_wav=args.output,
+        verify=args.verify,
+        verify_model=args.verify_model,
     )
 
-    audio_bytes, mime_type = _extract_audio_bytes(tts_resp)
-    if not audio_bytes:
-        raise SystemExit("No audio bytes found in TTS response")
 
-    fmt = _parse_pcm_format_from_mime(mime_type)
-    _write_wav_pcm16(args.output, audio_bytes, fmt)
+def _tts_only_parser() -> argparse.ArgumentParser:
+    p = argparse.ArgumentParser(description="GenerateContent TTS (Gemini 2.5 TTS preview) -> WAV")
+    p.add_argument("-t", "--text", required=True, help="Text to speak")
+    p.add_argument("-o", "--output", default="generate_content_tts.wav", help="Output WAV path")
+    p.add_argument("--tts-model", default=DEFAULT_TTS_MODEL, help=f"Model for TTS (default: {DEFAULT_TTS_MODEL})")
+    p.add_argument("--voice", default=DEFAULT_VOICE, help=f"Prebuilt voice name (default: {DEFAULT_VOICE})")
+    p.add_argument(
+        "--api-version",
+        default=os.environ.get("GEMINI_API_VERSION", "v1beta"),
+        help="API version for google-genai client (default: env GEMINI_API_VERSION or v1beta)",
+    )
+    p.add_argument("--verify", action="store_true", help="After writing WAV, transcribe it with a Gemini model and print transcript")
+    p.add_argument("--verify-model", default=DEFAULT_VERIFY_MODEL, help=f"Model used to transcribe the WAV (default: {DEFAULT_VERIFY_MODEL})")
+    return p
 
-    print(f"Wrote WAV: {args.output}")
-    if mime_type:
-        print(f"TTS mime_type: {mime_type}")
-    print(f"Assumed PCM format: {fmt.sample_rate_hz} Hz, {fmt.channels}ch, 16-bit")
 
-    if args.verify:
-        print() 
-        print("Verification: transcribing generated WAV...")
-        transcript = _transcribe_wav(client, model=args.verify_model, wav_path=args.output)
-        print("Transcript:")
-        print(transcript)
+def tts_only_main() -> None:
+    """Entry point for the `speakwav` CLI.
+
+    This speaks the provided text directly using a 2.5 TTS preview model (GenerateContent),
+    writes a WAV file, and optionally verifies via transcription.
+    """
+
+    args = _tts_only_parser().parse_args()
+    client = _client_for_api_version(args.api_version)
+    synthesize_tts_to_wav(
+        client=client,
+        tts_model=args.tts_model,
+        voice=args.voice,
+        text_to_speak=args.text,
+        output_wav=args.output,
+        verify=args.verify,
+        verify_model=args.verify_model,
+    )
+
+
+def tts_file_main() -> None:
+    """Entry point for the `speakwavf` CLI (read transcript from a file)."""
+
+    p = argparse.ArgumentParser(description="GenerateContent TTS from a text file -> WAV")
+    p.add_argument("-f", "--file", required=True, help="Path to UTF-8 text file to speak")
+    p.add_argument("-o", "--output", default="generate_content_tts.wav", help="Output WAV path")
+    p.add_argument("--tts-model", default=DEFAULT_TTS_MODEL, help=f"Model for TTS (default: {DEFAULT_TTS_MODEL})")
+    p.add_argument("--voice", default=DEFAULT_VOICE, help=f"Prebuilt voice name (default: {DEFAULT_VOICE})")
+    p.add_argument(
+        "--api-version",
+        default=os.environ.get("GEMINI_API_VERSION", "v1beta"),
+        help="API version for google-genai client (default: env GEMINI_API_VERSION or v1beta)",
+    )
+    p.add_argument("--verify", action="store_true", help="After writing WAV, transcribe it with a Gemini model and print transcript")
+    p.add_argument("--verify-model", default=DEFAULT_VERIFY_MODEL, help=f"Model used to transcribe the WAV (default: {DEFAULT_VERIFY_MODEL})")
+    args = p.parse_args()
+
+    try:
+        with open(args.file, "r", encoding="utf-8") as handle:
+            text = handle.read()
+    except Exception as exc:
+        raise SystemExit(f"Error: failed to read file '{args.file}': {exc}")
+
+    client = _client_for_api_version(args.api_version)
+    synthesize_tts_to_wav(
+        client=client,
+        tts_model=args.tts_model,
+        voice=args.voice,
+        text_to_speak=text,
+        output_wav=args.output,
+        verify=args.verify,
+        verify_model=args.verify_model,
+    )
+
+
+def speakwavf_main() -> None:
+    """Compatibility alias (mirrors gemini_live_audio.py wrappers).
+
+    Allows running `python -m experiments.gemini_3_text_then_25_tts ...` patterns if desired.
+    """
+
+    sys.argv = [sys.argv[0], *sys.argv[1:]]
+    tts_file_main()
 
 
 if __name__ == "__main__":

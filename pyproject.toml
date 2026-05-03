@@ -19,10 +19,19 @@ dev = [
 ]
 
 [project.scripts]
+# Live (streaming) TTS
 speak = "experiments.gemini_live_audio:main"
 speaks = "experiments.gemini_live_audio:speak_only_main"
 speakf = "experiments.gemini_live_audio:speak_file_main"
 speakme = "experiments.gemini_live_audio:speak_file_speak_me"
+
+# GenerateContent (non-Live) TTS -> WAV
+# - speakwav: synthesize the given text directly to a WAV file
+# - speakwavf: synthesize a text file directly to a WAV file
+# - speakwav3: (optional) Gemini 3 generates the transcript text, then 2.5 TTS synthesizes to WAV
+speakwav = "experiments.gemini_3_text_then_25_tts:tts_only_main"
+speakwavf = "experiments.gemini_3_text_then_25_tts:tts_file_main"
+speakwav3 = "experiments.gemini_3_text_then_25_tts:main"
 
 [build-system]
 requires = ["setuptools>=68"]

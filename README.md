@@ -23,7 +23,8 @@ We are currently in the active investigation phase:
 *   ✅ **Transcription:** STT V2 Chirp models are integrated and functional.
 *   ✅ **Native Audio (Live):** The Gemini Live API (WebSockets) is working and successfully generates native audio responses from text prompts.
 *   ✅ **Reliable Speech:** Standard Google Cloud TTS is used for consistent audio generation.
-*   ❌ **Native Audio (REST):** Direct `audio/wav` generation via `generateContent` (REST API) is currently **unavailable/blocked** on public preview endpoints.
+*   ✅ **Native Audio (GenerateContent / non-Live):** Gemini 2.5 TTS preview models can return audio via `generate_content` when using `response_modalities=["AUDIO"]`.
+*   ❌ **Still blocked:** requesting audio via `response_mime_type="audio/wav"` (GenerateContent only allows text/json/xml/yaml/enum mime types).
 
 ## 🚀 Getting Started
 1.  **Clone the repository.**
@@ -62,22 +63,44 @@ We are currently in the active investigation phase:
 ## 🗣️ CLI Shortcuts
 For convenience, this project defines several shortcuts in `pyproject.toml` to quickly use the Text-to-Speech capabilities. You can run these using `uv run`.
 
-### `speaks` (Speak Text)
-Immediately speaks the text provided as an argument (Interactive mode).
+### Live API (streaming)
+
+#### `speaks` (Speak Text)
+Immediately speaks the text provided as an argument (streaming playback).
 ```bash
 uv run speaks "Hello, I can speak this text immediately."
 ```
 
-### `speakf` (Speak File)
-Reads and speaks the contents of a text file.
+#### `speakf` (Speak File)
+Reads and speaks the contents of a text file (streaming playback).
 ```bash
 uv run speakf path/to/my_text.txt
 ```
 
-### `speakme` (Speak Default File)
+#### `speakme` (Speak Default File)
 Speaks the contents of the `speak_me.txt` file located in the current directory.
 ```bash
 uv run speakme
+```
+
+### GenerateContent (non-Live) -> WAV
+
+#### `speakwav` (Text -> WAV)
+Synthesizes a WAV file from text using the Gemini 2.5 TTS preview model.
+```bash
+uv run speakwav -t "Hello from GenerateContent TTS" -o out.wav
+```
+
+#### `speakwavf` (File -> WAV)
+Synthesizes a WAV file from a text file.
+```bash
+uv run speakwavf -f path/to/my_text.txt -o out.wav
+```
+
+#### `speakwav3` (Prompt -> Gemini 3 text -> WAV)
+Uses Gemini 3 to generate the transcript text, then synthesizes a WAV using Gemini 2.5 TTS.
+```bash
+uv run speakwav3 -p "Say hello in one sentence" -o out.wav
 ```
 
 ---
