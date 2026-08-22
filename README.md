@@ -11,6 +11,7 @@ This repository contains a series of focused experiments investigating different
 *   **Speech-to-Text V2 (Chirp):** High-precision transcription using Google's Universal Speech Model (USM). See `experiments/chirp_speech_recognition.py`.
 *   **Gemini Live API:** Real-time, low-latency WebSocket interactions that allow for streaming audio back-and-forth. **Verified working** for generating native Gemini audio. See `experiments/gemini_live_audio.py`.
 *   **Standard Text-to-Speech:** Utilizing Google Cloud TTS (Standard/Neural2) as a high-quality, reliable fallback for speech generation. See `experiments/standard_tts.py`.
+*   **Multi-speaker emotional TTS:** Renders the documented tired/bored and excited/happy dialogue to WAV with distinct Gemini TTS voices. See `experiments/multispeaker_emotion_tts.py`.
 *   **Audio Capture:** Implementing logic to buffer and save raw audio streams (e.g., PCM from Live API) into standard formats like WAV for persistent storage.
 
 ## 🏗️ Technical Stack
@@ -59,6 +60,16 @@ We are currently in the active investigation phase:
     # Use the older Gemini 2.0 Flash Exp model
     uv run experiments/gemini_live_audio.py -i -o
     ```
+
+### Try multi-speaker emotional TTS
+
+Generates the official tired/bored Speaker1 and excited/happy Speaker2 example as `multispeaker_emotion_tts.wav`.
+
+```bash
+uv run experiments/multispeaker_emotion_tts.py
+# or choose an output path
+uv run experiments/multispeaker_emotion_tts.py --output tired-and-excited.wav
+```
 
 ## 🗣️ CLI Shortcuts
 For convenience, this project defines several shortcuts in `pyproject.toml` to quickly use the Text-to-Speech capabilities. You can run these using `uv run`.

@@ -56,3 +56,7 @@ playwright-report/
 
 .aider*
 !.aider.conf.yml
+
+.pi/settings.json
+.pi/consortium/
+.pi/goals/
