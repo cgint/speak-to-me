@@ -1,13 +1,13 @@
-"""Gemini 3 (text) -> Gemini 2.5 TTS (GenerateContent AUDIO) -> WAV (+ optional self-verification).
+"""Gemini text model -> Gemini audio-capable model -> WAV (+ optional self-verification).
 
 Why this exists
-- Gemini 3.x models on the public Gemini API currently support **text output only**.
-- Gemini 2.5 TTS preview models support **audio output** via `response_modalities=["AUDIO"]`.
+- Gemini 3.x text models are useful for producing the text to speak.
+- Gemini audio-capable models support audio output via `response_modalities=["AUDIO"]`.
 
-So if you want a "Gemini 3 brain" but still want GenerateContent-based TTS,
+So if you want a "Gemini 3 brain" but still want TTS,
 this script does a 2-step pipeline:
   1) Use a Gemini 3 model to produce the text to speak.
-  2) Use a Gemini 2.5 *-preview-tts model to synthesize audio from that text.
+  2) Use a Gemini audio-capable model to synthesize audio from that text.
 
 Output details
 - The TTS model returns raw PCM16 (commonly mime_type
@@ -41,9 +41,11 @@ from google import genai
 from google.genai import types
 
 
-DEFAULT_TEXT_MODEL = "gemini-3-flash-preview"
-DEFAULT_TTS_MODEL = "gemini-2.5-flash-preview-tts"
-DEFAULT_VERIFY_MODEL = "gemini-3.1-flash-lite-preview"
+DEFAULT_TEXT_MODEL = "gemini-3.5-flash"
+# Must support `generateContent`. The Live-API model (…-flash-live-preview)
+# only serves `bidiGenerateContent` and 404s here.
+DEFAULT_TTS_MODEL = "gemini-3.1-flash-tts-preview"
+DEFAULT_VERIFY_MODEL = "gemini-3.1-flash-lite"
 DEFAULT_VOICE = "Puck"
 DEFAULT_OUT = "gemini_3_text_then_25_tts.wav"
 
@@ -212,9 +214,9 @@ def synthesize_tts_to_wav(
 
 
 def main() -> None:
-    """Pipeline mode: Gemini 3 generates transcript text, then 2.5 TTS synthesizes to WAV."""
+    """Pipeline mode: Gemini text model generates transcript text, then audio-capable model synthesizes to WAV."""
 
-    p = argparse.ArgumentParser(description="Gemini 3 text -> Gemini 2.5 TTS (GenerateContent) -> WAV")
+    p = argparse.ArgumentParser(description="Gemini text model -> Gemini audio-capable model -> WAV")
 
     p.add_argument("-p", "--prompt", required=True, help="Prompt for Gemini 3 to generate the text that will be spoken")
     p.add_argument("-o", "--output", default=DEFAULT_OUT, help="Output WAV path")

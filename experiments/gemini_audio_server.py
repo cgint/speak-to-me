@@ -14,8 +14,8 @@ def generate_audio(text: str, output_file: str = "gemini_native_output_aistudio.
     print("Initializing AI Studio Client (Non-Vertex)...")
     client = genai.Client(api_key=api_key)
 
-    # The specific model from the snippet
-    model_name = "gemini-2.5-flash-native-audio-preview-12-2025"
+    # Current audio-capable Gemini model
+    model_name = "gemini-3.1-flash-live-preview"
 
     print(f"Generating audio for: '{text}' using model {model_name}...")
 
@@ -50,5 +50,5 @@ def generate_audio(text: str, output_file: str = "gemini_native_output_aistudio.
              print(f"Error message: {e.message}")
 
 if __name__ == "__main__":
-    text_input = "Hello! This is a test of the specific 12-2025 preview model."
+    text_input = "Hello! This is a test of the current Gemini audio-capable model."
     generate_audio(text_input, "gemini_native_output.wav")

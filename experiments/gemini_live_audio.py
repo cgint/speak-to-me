@@ -9,7 +9,7 @@ from google.genai import types
 # Configuration
 # Use the API key from environment
 API_KEY = os.environ.get("GEMINI_API_KEY")
-MODEL_ID = "gemini-2.5-flash-native-audio-preview-12-2025" # Live API supports this model
+MODEL_ID = "gemini-3.1-flash-live-preview" # Live API audio-capable replacement model
 OUTPUT_FILENAME = "gemini_live_output.wav"
 
 async def play_audio_queue(queue: "asyncio.Queue[bytes | None]") -> None:

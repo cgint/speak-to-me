@@ -13,7 +13,7 @@ OUTPUT_FILE="${2:-output.wav}"
 
 echo "Generating audio for: '$TEXT'"
 
-curl "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-native-audio-latest:generateContent?key=${GEMINI_API_KEY}" \
+curl "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-live-preview:generateContent?key=${GEMINI_API_KEY}" \
     -H 'Content-Type: application/json' \
     -d '{
       "contents": [{"parts":[{"text": "'$TEXT'"}]}],

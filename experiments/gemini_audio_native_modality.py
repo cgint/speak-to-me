@@ -13,8 +13,8 @@ def generate_audio_native(text: str, output_file: str = "gemini_native_output.wa
 
     client = genai.Client(api_key=api_key)
 
-    # Try specific model names found in search
-    model_name = "gemini-2.5-flash-preview-tts"
+    # Current audio-capable Gemini model
+    model_name = "gemini-3.1-flash-live-preview"
 
     print(f"Generating audio for: '{text}' using model {model_name} with response_modalities=['AUDIO']...")
 
