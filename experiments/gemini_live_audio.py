@@ -3,14 +3,58 @@ import os
 import wave
 import argparse
 import sys
+from pathlib import Path
+from typing import Sequence
+
 from google import genai
 from google.genai import types
+
+from experiments.gemini_3_text_then_25_tts import (
+    DEFAULT_TTS_MODEL,
+    _client_for_api_version,
+    synthesize_tts_to_wav,
+)
 
 # Configuration
 # Use the API key from environment
 API_KEY = os.environ.get("GEMINI_API_KEY")
 MODEL_ID = "gemini-3.1-flash-live-preview" # Live API audio-capable replacement model
 OUTPUT_FILENAME = "gemini_live_output.wav"
+DEFAULT_VOICE = "Puck"
+# Google Gemini TTS Voice options, verified 2026-08-22:
+# https://ai.google.dev/gemini-api/docs/speech-generation#voice-options
+VOICE_CATALOG: tuple[tuple[str, str], ...] = (
+    ("Zephyr", "Bright"),
+    ("Puck", "Upbeat"),
+    ("Charon", "Informative"),
+    ("Kore", "Firm"),
+    ("Fenrir", "Excitable"),
+    ("Leda", "Youthful"),
+    ("Orus", "Firm"),
+    ("Aoede", "Breezy"),
+    ("Callirrhoe", "Easy-going"),
+    ("Autonoe", "Bright"),
+    ("Enceladus", "Breathy"),
+    ("Iapetus", "Clear"),
+    ("Umbriel", "Easy-going"),
+    ("Algieba", "Smooth"),
+    ("Despina", "Smooth"),
+    ("Erinome", "Clear"),
+    ("Algenib", "Gravelly"),
+    ("Rasalgethi", "Informative"),
+    ("Laomedeia", "Upbeat"),
+    ("Achernar", "Soft"),
+    ("Alnilam", "Firm"),
+    ("Schedar", "Even"),
+    ("Gacrux", "Mature"),
+    ("Pulcherrima", "Forward"),
+    ("Achird", "Friendly"),
+    ("Zubenelgenubi", "Casual"),
+    ("Vindemiatrix", "Gentle"),
+    ("Sadachbia", "Lively"),
+    ("Sadaltager", "Knowledgeable"),
+    ("Sulafat", "Warm"),
+)
 
 async def play_audio_queue(queue: "asyncio.Queue[bytes | None]") -> None:
     """
@@ -44,7 +88,7 @@ async def play_audio_queue(queue: "asyncio.Queue[bytes | None]") -> None:
     except Exception as e:
         print(f"\nError in audio playback: {e}")
 
-async def live_audio_session(play_audio: bool = False, save_audio: bool = True, model_id: str = MODEL_ID, voice_name: str = "Puck", text_to_speak_as_is: str = "I am pretty sure this will work.") -> None:
+async def live_audio_session(play_audio: bool = False, save_audio: bool = True, model_id: str = MODEL_ID, voice_name: str = DEFAULT_VOICE, text_to_speak_as_is: str = "I am pretty sure this will work.") -> None:
     if not API_KEY:
         print("Error: GEMINI_API_KEY not set.")
         return
@@ -143,7 +187,13 @@ def main() -> None:
     parser.add_argument("-i", "--interactive", action="store_true", help="Play audio in real-time while generating (streaming playback)")
     parser.add_argument("-s", "--speak-only", action="store_true", help="Play audio only; do not save to a file")
     parser.add_argument("-o", "--old", action="store_true", help="Use older model gemini-2.0-flash-exp instead of default")
-    parser.add_argument("-v", "--voice", type=str, default="Puck", help="Voice: Puck, Charon, Fenrir, Kore, Aoede, Leda, Orus, Zephyr")
+    parser.add_argument(
+        "-v",
+        "--voice",
+        type=str,
+        default=DEFAULT_VOICE,
+        help=f"Voice: {', '.join(name for name, _ in VOICE_CATALOG)}",
+    )
     parser.add_argument("-t", "--text", type=str, default="I am pretty sure this will work.", help="Text to speak (ignored if -f is used)")
     parser.add_argument("-f", "--file", type=str, help="Read text from this file and speak its contents")
     args = parser.parse_args()
@@ -178,9 +228,83 @@ def main() -> None:
     )
 
 
-def speak_only_main() -> None:
-    sys.argv = [sys.argv[0], "-s", "-t", *sys.argv[1:]]
-    main()
+def _speak_only_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        description="Speak text or a text file using Gemini, with optional WAV output.",
+        epilog=(
+            "Use --list-voices to print the documented Gemini prebuilt voice catalogue.\n"
+            "Source: https://ai.google.dev/gemini-api/docs/speech-generation#voice-options"
+        ),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+    parser.add_argument("input", nargs="*", help="Text to speak, or one existing text-file path")
+    parser.add_argument("-v", "--voice", default=DEFAULT_VOICE, help=f"Voice name (default: {DEFAULT_VOICE})")
+    parser.add_argument("--wav", metavar="OUT.wav", help="Write a WAV file instead of Live playback")
+    parser.add_argument(
+        "--list-voices",
+        action="store_true",
+        help="Print the documented Gemini prebuilt voice catalogue as a table",
+    )
+    return parser
+
+
+def _format_voice_catalog() -> str:
+    voice_width = max(len("Voice"), *(len(name) for name, _ in VOICE_CATALOG))
+    characteristic_width = max(len("Characteristic"), *(len(value) for _, value in VOICE_CATALOG))
+    header = f"{'Voice':<{voice_width}}  {'Characteristic':<{characteristic_width}}"
+    separator = f"{'-' * voice_width}  {'-' * characteristic_width}"
+    rows = [
+        f"{name:<{voice_width}}  {characteristic:<{characteristic_width}}"
+        for name, characteristic in VOICE_CATALOG
+    ]
+    return "\n".join([header, separator, *rows])
+
+
+def _resolve_speaks_input(parts: Sequence[str], parser: argparse.ArgumentParser) -> str:
+    if len(parts) == 1:
+        candidate = Path(parts[0])
+        if candidate.is_file():
+            try:
+                return candidate.read_text(encoding="utf-8")
+            except (OSError, UnicodeError) as exc:
+                parser.error(f"failed to read file '{candidate}': {exc}")
+    return " ".join(parts)
+
+
+def speak_only_main(argv: Sequence[str] | None = None) -> None:
+    """Entry point for `speaks`: Live playback by default, or direct WAV output."""
+    parser = _speak_only_parser()
+    args = parser.parse_args(argv)
+
+    if args.list_voices:
+        if args.input or args.wav:
+            parser.error("--list-voices cannot be combined with input or --wav")
+        print(_format_voice_catalog())
+        return
+
+    if not args.input:
+        parser.error("provide text or a file path")
+
+    text = _resolve_speaks_input(args.input, parser)
+    if args.wav:
+        api_version = os.environ.get("GEMINI_API_VERSION", "v1beta")
+        synthesize_tts_to_wav(
+            client=_client_for_api_version(api_version),
+            tts_model=DEFAULT_TTS_MODEL,
+            voice=args.voice,
+            text_to_speak=text,
+            output_wav=args.wav,
+        )
+        return
+
+    asyncio.run(
+        live_audio_session(
+            play_audio=True,
+            save_audio=False,
+            voice_name=args.voice,
+            text_to_speak_as_is=text,
+        )
+    )
 
 
 def speak_file_main() -> None:

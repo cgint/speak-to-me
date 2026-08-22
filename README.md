@@ -63,12 +63,15 @@ We are currently in the active investigation phase:
 ## 🗣️ CLI Shortcuts
 For convenience, this project defines several shortcuts in `pyproject.toml` to quickly use the Text-to-Speech capabilities. You can run these using `uv run`.
 
-### Live API (streaming)
+### Direct speech
 
-#### `speaks` (Speak Text)
-Immediately speaks the text provided as an argument (streaming playback).
+#### `speaks` (Speak text or a file)
+Speaks text or a text file with Live streaming playback by default. Use `--voice` to select a voice, `--wav` to write a WAV file, and `--list-voices` to inspect the supported voice catalog without an API request.
 ```bash
 uv run speaks "Hello, I can speak this text immediately."
+uv run speaks --voice Fenrir "Hello with a selected voice."
+uv run speaks --wav out.wav --voice Kore path/to/my_text.txt
+uv run speaks --list-voices
 ```
 
 #### `speakf` (Speak File)
