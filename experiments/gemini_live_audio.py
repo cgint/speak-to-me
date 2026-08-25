@@ -263,9 +263,13 @@ def _format_voice_catalog() -> str:
 def _resolve_speaks_input(parts: Sequence[str], parser: argparse.ArgumentParser) -> str:
     if len(parts) == 1:
         candidate = Path(parts[0])
-        if candidate.is_file():
+        # Guard: only attempt stat() if the string is plausibly a file path.
+        # A long text string (>255 chars or containing newlines) is not a path,
+        # so skip stat() entirely and fall through to the text-join path.
+        if len(parts[0]) <= 255 and "\n" not in parts[0]:
             try:
-                return candidate.read_text(encoding="utf-8")
+                if candidate.is_file():
+                    return candidate.read_text(encoding="utf-8")
             except (OSError, UnicodeError) as exc:
                 parser.error(f"failed to read file '{candidate}': {exc}")
     return " ".join(parts)
